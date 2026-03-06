@@ -7,8 +7,8 @@ import { LiveInvestigation } from './components/LiveInvestigation';
 import { DirectorMode } from './components/DirectorMode/DirectorMode';
 
 // Initialize Gemini Client
-// Note: In Vite, process.env.GEMINI_API_KEY is replaced by the define in vite.config.ts
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+// In Vite, environment variables exposed to the client must start with VITE_
+const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY });
 
 function App() {
   const [mode, setMode] = useState<'form' | 'live'>('form');
