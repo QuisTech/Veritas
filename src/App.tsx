@@ -1,14 +1,16 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { ShieldAlert, ShieldCheck, Activity, Search, AlertTriangle, FileAudio2, Image as ImageIcon, Terminal, BrainCircuit, Paperclip, Film, FileCode2, MapPin, Download, Loader2, Link, Plus } from 'lucide-react';
+import { ShieldAlert, ShieldCheck, Activity, Search, AlertTriangle, FileAudio2, Image as ImageIcon, Terminal, BrainCircuit, Paperclip, Film, FileCode2, MapPin, Download, Loader2, Link, Plus, Mic, FileText } from 'lucide-react';
 import { GoogleGenAI, ThinkingLevel } from "@google/genai";
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
+import { LiveInvestigation } from './components/LiveInvestigation';
 
 // Initialize Gemini Client
 // Note: In Vite, process.env.GEMINI_API_KEY is replaced by the define in vite.config.ts
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 function App() {
+  const [mode, setMode] = useState<'form' | 'live'>('form');
   const [artifactContent, setArtifactContent] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisResult, setAnalysisResult] = useState<any>(null);
@@ -283,11 +285,41 @@ function App() {
         </p>
       </header>
 
+      {/* Mode Toggle */}
+      <div className="mb-8 flex space-x-4 bg-slate-900/50 p-1 rounded-lg border border-slate-700/50 backdrop-blur-sm">
+        <button
+          onClick={() => setMode('form')}
+          className={`flex items-center px-6 py-2 rounded-md font-mono text-sm transition-all duration-200 ${
+            mode === 'form' 
+              ? 'bg-veritas-accent/20 text-veritas-accent border border-veritas-accent/50 shadow-[0_0_10px_rgba(16,185,129,0.2)]' 
+              : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'
+          }`}
+        >
+          <FileText className="w-4 h-4 mr-2" />
+          FORENSIC_FORM
+        </button>
+        <button
+          onClick={() => setMode('live')}
+          className={`flex items-center px-6 py-2 rounded-md font-mono text-sm transition-all duration-200 ${
+            mode === 'live' 
+              ? 'bg-veritas-accent/20 text-veritas-accent border border-veritas-accent/50 shadow-[0_0_10px_rgba(16,185,129,0.2)]' 
+              : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'
+          }`}
+        >
+          <Mic className="w-4 h-4 mr-2" />
+          LIVE_INTERROGATION
+        </button>
+      </div>
+
       {/* Main Content */}
       <main className="w-full max-w-4xl space-y-8 flex-1">
         
-        {/* Input Section */}
-        <section className="glass-panel p-6 sm:p-8">
+        {mode === 'live' ? (
+          <LiveInvestigation />
+        ) : (
+          <>
+            {/* Input Section */}
+            <section className="glass-panel p-6 sm:p-8">
           <h2 className="text-xl font-bold mb-4 font-mono text-white flex items-center">
             <Search className="mr-2 h-5 w-5 text-veritas-accent" />
             Input Suspicious Artifact
@@ -633,6 +665,9 @@ function App() {
                 <p style={{ fontSize: '12px', color: '#94a3b8', fontFamily: 'monospace', margin: '4px 0 0 0' }}>POWERED BY GEMINI 3.1 PRO</p>
              </div>
           </div>
+        )}
+
+        </>
         )}
 
       </main>
