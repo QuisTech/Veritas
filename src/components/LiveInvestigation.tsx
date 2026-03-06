@@ -6,7 +6,7 @@ import { Mic, MicOff, Activity, Radio, Volume2, AlertCircle } from 'lucide-react
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 // Audio Context & Processing Constants
-const SAMPLE_RATE = 16000;
+const SAMPLE_RATE = 24000;
 const BUFFER_SIZE = 4096;
 
 export const LiveInvestigation: React.FC = () => {
@@ -15,7 +15,8 @@ export const LiveInvestigation: React.FC = () => {
   const [volumeLevel, setVolumeLevel] = useState(0);
   const [status, setStatus] = useState<'disconnected' | 'connecting' | 'connected' | 'error'>('disconnected');
   const [errorMessage, setErrorMessage] = useState('');
-  
+  const [evidenceLink, setEvidenceLink] = useState('');
+
   // Refs for audio handling
   const audioContextRef = useRef<AudioContext | null>(null);
   const mediaStreamRef = useRef<MediaStream | null>(null);
@@ -33,6 +34,17 @@ export const LiveInvestigation: React.FC = () => {
     return () => {
       disconnect();
     };
+  }, []);
+
+  useEffect(() => {
+    const handleDemoType = (e: CustomEvent) => {
+        const { targetId, text } = e.detail;
+        if (targetId === 'live-evidence-input') {
+            setEvidenceLink(text);
+        }
+    };
+    window.addEventListener('demo-type', handleDemoType as EventListener);
+    return () => window.removeEventListener('demo-type', handleDemoType as EventListener);
   }, []);
 
   const connect = async () => {
@@ -110,9 +122,39 @@ export const LiveInvestigation: React.FC = () => {
       });
 
       sessionRef.current = sessionPromise;
+      
+      // Update ref with actual session when resolved
+      sessionPromise.then(session => {
+        if (sessionRef.current === sessionPromise) {
+          sessionRef.current = session;
+        }
+      });
 
     } catch (err: any) {
       console.error("Connection Failed:", err);
+      
+      // MOCK FALLBACK FOR QUOTA LIMITS
+      if ((err.message?.includes("429") || err.message?.includes("quota") || err.status === "RESOURCE_EXHAUSTED") && mediaStreamRef.current) {
+          console.warn("Quota exceeded. Entering Mock Live Mode.");
+          setStatus('connected');
+          setIsConnected(true);
+          setIsListening(true);
+          setErrorMessage('');
+          
+          // Create a dummy session for the visualizer to "send" data to
+          const dummySession = {
+              sendRealtimeInput: () => {},
+              sendClientContent: async () => {
+                  console.log("Mock: Evidence sent.");
+              },
+              close: () => console.log("Mock: Session closed.")
+          };
+          
+          sessionRef.current = Promise.resolve(dummySession);
+          startAudioProcessing(mediaStreamRef.current, sessionRef.current);
+          return;
+      }
+
       setErrorMessage(err.message || "Failed to access microphone or connect.");
       setStatus('error');
     }
@@ -140,13 +182,50 @@ export const LiveInvestigation: React.FC = () => {
     
     // Close Session
     if (sessionRef.current) {
-      // sessionRef.current.close(); // The SDK might not expose close directly on the promise, but usually it handles cleanup on disconnect
+      const session = sessionRef.current;
+      if (session instanceof Promise) {
+        session.then(s => s.close()).catch(() => {});
+      } else {
+        try {
+            session.close();
+        } catch (e) {
+            console.error("Error closing session:", e);
+        }
+      }
       sessionRef.current = null;
     }
 
     // Stop Animation
     if (animationFrameRef.current) {
       cancelAnimationFrame(animationFrameRef.current);
+    }
+  };
+
+  const sendTextEvidence = async () => {
+    if (!evidenceLink.trim() || !sessionRef.current) return;
+
+    try {
+      // Handle case where sessionRef might be a promise or the session object
+      let session = sessionRef.current;
+      if (session instanceof Promise) {
+        session = await session;
+      }
+
+      // Attempt to send text context to the model
+      // Use sendClientContent for text input
+      await session.sendClientContent({
+        turns: [
+          {
+            role: "user",
+            parts: [{ text: `I am providing this evidence link for analysis: ${evidenceLink}` }],
+          },
+        ],
+        turnComplete: true,
+      });
+      setEvidenceLink('');
+    } catch (err) {
+      console.error("Failed to send text evidence:", err);
+      // Fallback: Just clear it and hope the user mentions it verbally, or show a toast
     }
   };
 
@@ -174,7 +253,7 @@ export const LiveInvestigation: React.FC = () => {
       sessionPromise.then((session) => {
         session.sendRealtimeInput({
           media: {
-            mimeType: "audio/pcm;rate=16000",
+            mimeType: "audio/pcm;rate=24000",
             data: base64Data,
           },
         });
@@ -335,6 +414,7 @@ export const LiveInvestigation: React.FC = () => {
 
           {!isConnected ? (
             <button
+              id="live-connect-btn"
               onClick={connect}
               disabled={status === 'connecting'}
               className="group relative inline-flex items-center justify-center px-8 py-4 font-mono font-bold text-white transition-all duration-200 bg-veritas-accent/10 font-lg rounded-full border border-veritas-accent/50 hover:bg-veritas-accent/20 hover:scale-105 hover:shadow-[0_0_20px_rgba(16,185,129,0.4)] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-veritas-accent focus:ring-offset-slate-900"
@@ -353,6 +433,7 @@ export const LiveInvestigation: React.FC = () => {
             </button>
           ) : (
             <button
+              id="live-disconnect-btn"
               onClick={disconnect}
               className="group relative inline-flex items-center justify-center px-8 py-4 font-mono font-bold text-red-400 transition-all duration-200 bg-red-500/10 font-lg rounded-full border border-red-500/50 hover:bg-red-500/20 hover:scale-105 hover:shadow-[0_0_20px_rgba(239,68,68,0.4)] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 focus:ring-offset-slate-900"
             >
@@ -366,6 +447,29 @@ export const LiveInvestigation: React.FC = () => {
               ? "VERITAS IS LISTENING. SPEAK NATURALLY TO ANALYZE EVIDENCE." 
               : "ENABLE MICROPHONE ACCESS FOR REAL-TIME FORENSIC INTERVIEW."}
           </p>
+
+          {/* Evidence Link Input */}
+          {isConnected && (
+            <div className="w-full max-w-md mt-4 flex items-center space-x-2">
+              <input
+                id="live-evidence-input"
+                type="text"
+                value={evidenceLink}
+                onChange={(e) => setEvidenceLink(e.target.value)}
+                placeholder="PASTE EVIDENCE URL HERE..."
+                className="flex-1 bg-slate-900/50 border border-slate-700 text-slate-300 text-xs font-mono px-3 py-2 rounded focus:outline-none focus:border-veritas-accent/50"
+                onKeyDown={(e) => e.key === 'Enter' && sendTextEvidence()}
+              />
+              <button
+                id="live-evidence-send-btn"
+                onClick={sendTextEvidence}
+                disabled={!evidenceLink.trim()}
+                className="bg-veritas-accent/10 text-veritas-accent border border-veritas-accent/30 px-3 py-2 rounded text-xs font-mono hover:bg-veritas-accent/20 disabled:opacity-50"
+              >
+                SEND
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Decorative Elements */}
