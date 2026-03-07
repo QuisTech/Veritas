@@ -8,7 +8,8 @@ import { DirectorMode } from './components/DirectorMode/DirectorMode';
 
 // Initialize Gemini Client
 // In Vite, environment variables exposed to the client must start with VITE_
-const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY });
+// Remove top-level static initialization to prevent crashes when env is missing
+// const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY });
 
 function App() {
   const [mode, setMode] = useState<'form' | 'live'>('form');
@@ -16,6 +17,10 @@ function App() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisResult, setAnalysisResult] = useState<any>(null);
   const [error, setError] = useState('');
+  
+  // Dynamic API Key State
+  const [apiKey, setApiKey] = useState(import.meta.env.VITE_GEMINI_API_KEY || '');
+  const [showConfig, setShowConfig] = useState(!import.meta.env.VITE_GEMINI_API_KEY);
   const [thinkingMode, setThinkingMode] = useState(false);
   const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
   const [referenceUrls, setReferenceUrls] = useState<string[]>([]);
@@ -249,6 +254,13 @@ function App() {
 
       const modelId = "gemini-3.1-pro-preview";
 
+      if (!apiKey) {
+         throw new Error("Configuration Error: API Key is missing. Please provide a valid Gemini API Key.");
+      }
+
+      // Initialize client dynamically
+      const ai = new GoogleGenAI({ apiKey });
+
       const response = await ai.models.generateContent({
         model: modelId,
         contents: { parts },
@@ -368,6 +380,37 @@ function App() {
           LIVE_INTERROGATION
         </button>
       </div>
+
+      {showConfig && (
+        <div className="w-full max-w-4xl mb-8 p-4 bg-slate-800/80 border border-amber-500/50 rounded-lg shadow-lg relative">
+          <button 
+             onClick={() => setShowConfig(false)}
+             className="absolute top-2 right-2 text-slate-400 hover:text-white"
+          >
+             &times;
+          </button>
+          <div className="flex items-start">
+             <AlertTriangle className="h-5 w-5 text-amber-500 mr-3 mt-0.5 flex-shrink-0" />
+             <div className="flex-1">
+               <h3 className="text-sm font-bold text-amber-500 font-mono mb-2">SYSTEM ALERT: MISSING GEMINI API KEY</h3>
+               <p className="text-xs text-slate-300 mb-3">
+                 The environment variable <code className="bg-black/30 px-1 py-0.5 rounded text-amber-300">VITE_GEMINI_API_KEY</code> was not found in the deployment build. 
+                 To use the agent, please provide your key temporarily below, or update your Vercel Environment Variables.
+               </p>
+               <input 
+                 type="password"
+                 value={apiKey}
+                 onChange={(e) => setApiKey(e.target.value)}
+                 placeholder="AIzaSy..."
+                 className="w-full bg-slate-900 border border-slate-700 rounded p-2 text-sm text-white font-mono placeholder-slate-600 focus:ring-1 focus:ring-amber-500 outline-none"
+               />
+               <p className="text-[10px] text-slate-500 mt-2">
+                 *This key is only stored in memory for this session and is never saved to a database.
+               </p>
+             </div>
+          </div>
+        </div>
+      )}
 
       {/* Main Content */}
       <main className="w-full max-w-4xl space-y-8 flex-1">
