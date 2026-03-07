@@ -416,7 +416,7 @@ function App() {
       <main className="w-full max-w-4xl space-y-8 flex-1">
         
         {mode === 'live' ? (
-          <LiveInvestigation />
+          <LiveInvestigation apiKey={apiKey} />
         ) : (
           <>
             {/* Input Section */}
@@ -788,7 +788,7 @@ function App() {
             [ Initiate Director Mode ]
         </button>
       </footer>
-      {isDemoMode && <DirectorMode onClose={() => setIsDemoMode(false)} />}
+      {isDemoMode && <DirectorMode apiKey={apiKey} onClose={() => setIsDemoMode(false)} />}
     </div>
   );
 }

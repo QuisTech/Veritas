@@ -2,14 +2,17 @@ import React, { useEffect, useRef, useState } from 'react';
 import { GoogleGenAI, LiveServerMessage, Modality } from "@google/genai";
 import { Mic, MicOff, Activity, Radio, Volume2, AlertCircle } from 'lucide-react';
 
-// Initialize Gemini Client
-const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY || '' });
-
 // Audio Context & Processing Constants
 const SAMPLE_RATE = 24000;
 const BUFFER_SIZE = 4096;
 
-export const LiveInvestigation: React.FC = () => {
+interface LiveInvestigationProps {
+  apiKey: string;
+}
+
+export const LiveInvestigation: React.FC<LiveInvestigationProps> = ({ apiKey }) => {
+  // Initialize Gemini Client
+  const ai = new GoogleGenAI({ apiKey });
   const [isConnected, setIsConnected] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [volumeLevel, setVolumeLevel] = useState(0);

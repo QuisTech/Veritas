@@ -4,9 +4,6 @@ import { PluginConsole, PluginConsoleRef } from './PluginConsole';
 import { GoogleGenAI, Modality } from "@google/genai";
 import { User } from 'lucide-react';
 
-// Initialize Gemini Client
-const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY || '' });
-
 // Script designed for 1920x1080 roughly, utilizing percentages where possible
 type ScriptStep = 
   | { type: 'cursor'; targetId?: string; x?: number | string; y?: number | string; delay?: number }
@@ -107,7 +104,10 @@ const SCRIPT: ScriptStep[] = [
     { type: 'cursor', x: '95%', y: '95%', delay: 1000 },
 ];
 
-export function DirectorMode({ onClose }: { onClose: () => void }) {
+export function DirectorMode({ apiKey, onClose }: { apiKey: string, onClose: () => void }) {
+    // Initialize Gemini Client
+    const ai = new GoogleGenAI({ apiKey });
+    
     const [subtitle, setSubtitle] = useState('');
     const [cursorPos, setCursorPos] = useState({ x: 100, y: 100 });
     const [isClicking, setIsClicking] = useState(false);
