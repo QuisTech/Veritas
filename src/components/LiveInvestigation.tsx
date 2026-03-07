@@ -3,7 +3,7 @@ import { GoogleGenAI, LiveServerMessage, Modality } from "@google/genai";
 import { Mic, MicOff, Activity, Radio, Volume2, AlertCircle } from 'lucide-react';
 
 // Initialize Gemini Client
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY || '' });
 
 // Audio Context & Processing Constants
 const SAMPLE_RATE = 24000;

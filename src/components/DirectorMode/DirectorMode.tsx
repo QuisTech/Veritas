@@ -5,7 +5,7 @@ import { GoogleGenAI, Modality } from "@google/genai";
 import { User } from 'lucide-react';
 
 // Initialize Gemini Client
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY || '' });
 
 // Script designed for 1920x1080 roughly, utilizing percentages where possible
 type ScriptStep = 
