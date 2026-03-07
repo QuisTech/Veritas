@@ -50,3 +50,59 @@ We plan to integrate VERITAS as a browser extension, allowing instant background
 - **Frameworks & Libraries:** React 19, Vite, Tailwind CSS V4, Framer Motion, Express.js
 - **Cloud Services & APIs:** Google Gemini 3.1 Pro API, Firebase (Firestore), Vercel
 - **Tools & Utilities:** Node.js, Lucide-React (Icons), html2canvas & jsPDF (Exporting), Multer (File Handling)
+
+---
+
+## Architecture Diagram
+
+```mermaid
+graph TD
+    %% Define Styles
+    classDef client fill:#0f172a,stroke:#10b981,stroke-width:2px,color:#f8fafc
+    classDef api fill:#1e1e2f,stroke:#3b82f6,stroke-width:2px,color:#f8fafc
+    classDef backend fill:#1f2937,stroke:#f59e0b,stroke-width:2px,color:#f8fafc
+    classDef db fill:#374151,stroke:#ef4444,stroke-width:2px,color:#f8fafc
+
+    %% Subgraphs
+    subgraph Client [Client-Side Application]
+        UI[React UI / Vite]:::client
+        State[React State & Hooks]:::client
+        Upload[Multer File Handler]:::client
+        PDF[jsPDF & html2canvas<br>Report Generator]:::client
+    end
+
+    subgraph External_Services [Google Cloud AI]
+        Gemini[Google Gemini 3.1 Pro API<br/>Native Multimodal]:::api
+    end
+
+    subgraph Backend_Services [Backend & Storage]
+        Firebase[Firebase Firestore<br/>CBT State & History]:::db
+        Vercel[Vercel Serverless Functions<br/>Hosting & Env Vars]:::backend
+    end
+
+    subgraph User [User Interactions]
+        UserActor((User / Analyst))
+    end
+
+    %% Connections
+    UserActor -->|Uploads Deepfakes,<br>Text, Images, Audio| UI
+    UserActor -->|Interacts with CBT Exams| UI
+
+    UI <--> State
+    State -->|Base64 Encoded Media| Upload
+
+    %% Core API flow
+    Upload -->|System Prompt + <br>Media FormData| Gemini
+    Gemini -->|Structured JSON Dossier| State
+
+    %% Report Flow
+    State -->|Render Results| UI
+    UI -->|Export| PDF
+
+    %% Database Flow
+    State <-->|Read/Write CBT Locks<br>Optimistic UI Updates| Firebase
+
+    %% Infrastructure Flow
+    UI -.->|Hosted On| Vercel
+    Vercel -.->|Secures API Keys| Gemini
+```
