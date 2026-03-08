@@ -118,3 +118,69 @@ graph TD
     UI -.->|Hosted On| Vercel
     Vercel -.->|Secures API Keys| Gemini
 ```
+
+---
+
+## Folder Architecture
+
+```mermaid
+graph TD
+    %% Define Styles
+    classDef root fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#f8fafc
+    classDef config fill:#1e293b,stroke:#64748b,stroke-width:2px,color:#f8fafc
+    classDef dir fill:#334155,stroke:#94a3b8,stroke-width:2px,color:#f8fafc
+    classDef file fill:#475569,stroke:#cbd5e1,stroke-width:1px,color:#f8fafc
+    classDef src fill:#1e1e2f,stroke:#10b981,stroke-width:2px,color:#f8fafc
+
+    %% Root
+    Root("VERITAS Root"):::root
+    
+    %% Config and root files
+    Env(".env / .env.example"):::config
+    GitIgnore(".gitignore"):::config
+    Devpost("Devpost.md"):::config
+    Readme("README.md"):::config
+    PackageJson("package.json / package-lock.json"):::config
+    TSConfig("tsconfig.json"):::config
+    ViteConfig("vite.config.ts"):::config
+    ServerTS("server.ts"):::file
+    IndexHTML("index.html"):::file
+    
+    %% Main directories
+    SrcDir["src/"]:::src
+    DistDir["dist/ (Build output)"]:::dir
+    NodeModules["node_modules/"]:::dir
+
+    %% Connect root to top-level items
+    Root --> Env
+    Root --> GitIgnore
+    Root --> Devpost
+    Root --> Readme
+    Root --> ServerTS
+    Root --> IndexHTML
+    Root --> PackageJson
+    Root --> TSConfig
+    Root --> ViteConfig
+    Root --> DistDir
+    Root --> NodeModules
+    Root --> SrcDir
+
+    %% src contents
+    SrcApp("App.tsx"):::file
+    SrcMain("main.tsx"):::file
+    SrcIndexCSS("index.css"):::file
+    SrcFirebase("firebase.ts"):::file
+    SrcViteEnv("vite-env.d.ts"):::file
+    ComponentsDir["components/"]:::dir
+
+    %% Connect src to its contents
+    SrcDir --> SrcMain
+    SrcDir --> SrcApp
+    SrcDir --> SrcIndexCSS
+    SrcDir --> SrcFirebase
+    SrcDir --> SrcViteEnv
+    SrcDir --> ComponentsDir
+    
+    %% Sub-components representation
+    ComponentsDir -.-> C1("DirectorMode, PluginConsole, etc."):::file
+```
