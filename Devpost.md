@@ -1,6 +1,6 @@
 # VERITAS: Virtual Evidence Reconstruction & Intelligence Tracking Analysis System
 
-- **VERITAS Cover**: ![VERITAS cover](https://raw.githubusercontent.com/QuisTech/Veritas/main/assets/veritas_cover_image.png)
+- **VERITAS Cover**: ![VERITAS cover](https://raw.githubusercontent.com/QuisTech/Veritas/main/assets/veritas_demo.gif)
 
 ## Inspiration
 
