@@ -1,5 +1,7 @@
 # VERITAS: Virtual Evidence Reconstruction & Intelligence Tracking Analysis System
 
+- **VERITAS Cover**: ![VERITAS cover](https://raw.githubusercontent.com/QuisTech/Veritas/main/assets/veritas_cover_image.png)
+
 ## Inspiration
 
 With the explosive growth of Generative AI, the line between reality and digital fabrication has never been thinner. Deepfakes, synthetic audio, and AI-generated text are being weaponized for misinformation at an unprecedented scale. We realized that traditional fact-checking tools are too slow and single-modal to combat this. We needed an automated, real-time forensic agent capable of parsing text, images, audio, and video simultaneously—just like a human investigator, but with the speed and precision of AI. This inspired **VERITAS** (Virtual Evidence Reconstruction & Intelligence Tracking Analysis System), an advanced multimodal forensic deconstruction agent designed to expose the truth behind synthetic media.
@@ -55,6 +57,8 @@ We plan to integrate VERITAS as a browser extension, allowing instant background
 
 ## Architecture Diagram
 
+- **Architecture Diagram**: ![Architecture Diagram](https://raw.githubusercontent.com/QuisTech/Veritas/main/assets/architecture_diagram.png)
+
 ```mermaid
 graph TD
     %% Define Styles
@@ -64,47 +68,37 @@ graph TD
     classDef db fill:#374151,stroke:#ef4444,stroke-width:2px,color:#f8fafc
 
     %% Subgraphs
-    subgraph Client [Client-Side Application]
-        UI[React UI / Vite]:::client
-        State[React State & Hooks]:::client
-        Upload[Multer File Handler]:::client
-        PDF[jsPDF & html2canvas<br>Report Generator]:::client
+    subgraph Client ["Client-Side Application"]
+        UI["React UI / Vite"]:::client
+        State["React State & Hooks"]:::client
+        Upload["Multer File Handler"]:::client
+        PDF["Report Generator"]:::client
     end
 
-    subgraph External_Services [Google Cloud AI]
-        Gemini[Google Gemini 3.1 Pro API<br/>Native Multimodal]:::api
+    subgraph External_Services ["Google Cloud AI"]
+        Gemini["Google Gemini 3.1 Pro API"]:::api
     end
 
-    subgraph Backend_Services [Backend & Storage]
-        Firebase[Firebase Firestore<br/>CBT State & History]:::db
-        Vercel[Vercel Serverless Functions<br/>Hosting & Env Vars]:::backend
+    subgraph Backend_Services ["Backend & Storage"]
+        Firebase["Firebase Firestore"]:::db
+        Vercel["Vercel Functions"]:::backend
     end
 
-    subgraph User [User Interactions]
-        UserActor((User / Analyst))
+    subgraph User ["User Interactions"]
+        UserActor["User / Analyst"]
     end
 
     %% Connections
-    UserActor -->|Uploads Deepfakes,<br>Text, Images, Audio| UI
-    UserActor -->|Interacts with CBT Exams| UI
-
+    UserActor --> UI
     UI <--> State
-    State -->|Base64 Encoded Media| Upload
-
-    %% Core API flow
-    Upload -->|System Prompt + <br>Media FormData| Gemini
-    Gemini -->|Structured JSON Dossier| State
-
-    %% Report Flow
-    State -->|Render Results| UI
-    UI -->|Export| PDF
-
-    %% Database Flow
-    State <-->|Read/Write CBT Locks<br>Optimistic UI Updates| Firebase
-
-    %% Infrastructure Flow
-    UI -.->|Hosted On| Vercel
-    Vercel -.->|Secures API Keys| Gemini
+    State --> Upload
+    Upload --> Gemini
+    Gemini --> State
+    State --> UI
+    UI --> PDF
+    State <--> Firebase
+    UI -.-> Vercel
+    Vercel -.-> Gemini
 ```
 
 ---
